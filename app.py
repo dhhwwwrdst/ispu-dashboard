@@ -23,6 +23,24 @@ st.set_page_config(
 # LOAD DATA
 # =========================
 df = pd.read_csv("dataset_ispu.csv")
+df["tahun"] = df["periode_data"].astype(str).str[:4]
+df["bulan_num"] = df["periode_data"].astype(str).str[4:6]
+bulan_map = {
+    "01":"Januari",
+    "02":"Februari",
+    "03":"Maret",
+    "04":"April",
+    "05":"Mei",
+    "06":"Juni",
+    "07":"Juli",
+    "08":"Agustus",
+    "09":"September",
+    "10":"Oktober",
+    "11":"November",
+    "12":"Desember"
+}
+
+df["nama_bulan"] = df["bulan_num"].map(bulan_map)
 
 # =========================
 # LOAD MODEL
@@ -131,15 +149,17 @@ elif menu == "📊 Dataset Insight":
 
     col1, col2, col3 = st.columns(3)
 
-    tahun = col1.selectbox(
-        "Pilih Tahun",
-        ["Semua"] + sorted(df["periode_data"].astype(str).unique().tolist())
-    )
+    df["tahun"] = df["periode_data"].astype(str).str[:4]
+
+tahun = col1.selectbox(
+    "Pilih Tahun",
+    ["Semua"] + sorted(df["tahun"].unique().tolist())
+)
 
     bulan = col2.selectbox(
-        "Pilih Bulan",
-        ["Semua"] + sorted(df["bulan"].astype(str).unique().tolist())
-    )
+    "Pilih Bulan",
+    ["Semua"] + list(bulan_map.values())
+)
 
     stasiun = col3.selectbox(
         "Pilih Stasiun",
@@ -149,10 +169,10 @@ elif menu == "📊 Dataset Insight":
     data = df.copy()
 
     if tahun != "Semua":
-        data = data[data["periode_data"].astype(str) == tahun]
+    data = data[data["tahun"] == tahun]
 
     if bulan != "Semua":
-        data = data[data["bulan"].astype(str) == bulan]
+    data = data[data["nama_bulan"] == bulan]
 
     if stasiun != "Semua":
         data = data[data["stasiun"] == stasiun]
