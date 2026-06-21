@@ -338,3 +338,190 @@ elif menu == "📈 Visualisasi Data":
             fig,
             use_container_width=True
         )
+
+# =====================================================
+# ANALISIS CLUSTERING
+# =====================================================
+
+elif menu == "🤖 Analisis Clustering":
+
+    st.title("🤖 Analisis Clustering K-Means")
+
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📉 Elbow",
+        "📈 Silhouette",
+        "🔥 Karakteristik Cluster",
+        "🌫️ Distribusi Risiko"
+    ])
+
+    with tab1:
+
+        st.subheader("Metode Elbow")
+
+        inertia = []
+
+        X = scaler.transform(df[fitur])
+
+        for k in range(2,11):
+
+            model = KMeans(
+                n_clusters=k,
+                random_state=42,
+                n_init=10
+            )
+
+            model.fit(X)
+
+            inertia.append(model.inertia_)
+
+        fig = px.line(
+            x=list(range(2,11)),
+            y=inertia,
+            markers=True
+        )
+
+        fig.update_layout(
+            xaxis_title="Jumlah Cluster",
+            yaxis_title="Inertia"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+        st.success("Jumlah cluster optimal diperoleh pada k = 4.")
+
+    with tab2:
+
+        st.subheader("Silhouette Score")
+
+        nilai = {
+            2:0.2424,
+            3:0.2373,
+            4:0.2553,
+            5:0.2321,
+            6:0.2203,
+            7:0.2245,
+            8:0.2347,
+            9:0.2273,
+            10:0.2292
+        }
+
+        fig = px.line(
+            x=list(nilai.keys()),
+            y=list(nilai.values()),
+            markers=True
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+        st.metric(
+            "Silhouette Score Terbaik",
+            "0.2553"
+        )
+
+        st.info(
+            "Cluster optimal berada pada k = 4."
+        )
+
+    with tab3:
+
+        st.subheader("Karakteristik Rata-rata Polutan")
+
+        cluster_summary = df.groupby("cluster")[fitur].mean().round(2)
+
+        fig, ax = plt.subplots(figsize=(10,6))
+
+        sns.heatmap(
+            cluster_summary,
+            annot=True,
+            cmap="YlOrRd",
+            fmt=".1f",
+            ax=ax
+        )
+
+        st.pyplot(fig)
+
+        st.dataframe(cluster_summary)
+
+    with tab4:
+
+        st.subheader("Distribusi Data per Cluster")
+
+        jumlah = df["cluster"].value_counts().sort_index()
+
+        fig = px.bar(
+            x=jumlah.index.astype(str),
+            y=jumlah.values,
+            labels={
+                "x":"Cluster",
+                "y":"Jumlah Data"
+            }
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+        st.dataframe(
+            jumlah.rename("Jumlah Data")
+        )
+
+# =====================================================
+# CLUSTER CHECKER
+# =====================================================
+
+elif menu == "🔍 Cluster Checker":
+
+    st.title("🔍 Cluster Checker")
+
+    st.write(
+        "Masukkan nilai parameter polutan untuk mengetahui cluster dan kategori risiko berdasarkan model K-Means."
+    )
+
+    col1, col2 = st.columns(2)
+
+    pm10 = col1.number_input("PM10", min_value=0.0)
+    pm25 = col1.number_input("PM2.5", min_value=0.0)
+    so2 = col1.number_input("SO₂", min_value=0.0)
+
+    co = col2.number_input("CO", min_value=0.0)
+    o3 = col2.number_input("O₃", min_value=0.0)
+    no2 = col2.number_input("NO₂", min_value=0.0)
+
+    if st.button("Cek Cluster"):
+
+        input_df = pd.DataFrame([[
+            pm10,
+            pm25,
+            so2,
+            co,
+            o3,
+            no2
+        ]], columns=fitur)
+
+        data_scaled = scaler.transform(input_df)
+
+        cluster = kmeans.predict(data_scaled)[0]
+
+        ranking = (
+            df.groupby("cluster")[fitur]
+            .mean()
+            .mean(axis=1)
+            .sort_values()
+        )
+
+        label = {
+            ranking.index[0]: "🟢 Risiko Rendah",
+            ranking.index[1]: "🟡 Risiko Sedang",
+            ranking.index[2]: "🟠 Risiko Tinggi",
+            ranking.index[3]: "🔴 Risiko Sangat Tinggi"
+        }
+
+        st.success(f"Cluster : {cluster}")
+        st.info(f"Kategori Risiko : {label[cluster]}")
