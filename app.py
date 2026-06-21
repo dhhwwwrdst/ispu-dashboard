@@ -198,3 +198,143 @@ elif menu == "📊 Dataset Insight":
         data[fitur].describe().round(2),
         use_container_width=True
     )
+
+# =====================================================
+# VISUALISASI DATA
+# =====================================================
+
+elif menu == "📈 Visualisasi Data":
+
+    st.title("📈 Visualisasi Data")
+
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📌 Heatmap",
+        "📊 Distribusi",
+        "🥧 Proporsi",
+        "🗺️ PCA"
+    ])
+
+    with tab1:
+
+        st.subheader("Heatmap Korelasi Parameter Polutan")
+
+        corr = df[fitur].corr()
+
+        fig, ax = plt.subplots(figsize=(8,6))
+
+        sns.heatmap(
+            corr,
+            annot=True,
+            cmap="YlGnBu",
+            ax=ax
+        )
+
+        st.pyplot(fig)
+
+    with tab2:
+
+        pilihan = st.selectbox(
+            "Pilih Visualisasi",
+            [
+                "Distribusi Tahun",
+                "Distribusi Bulan",
+                "Distribusi Stasiun",
+                "Distribusi Kategori"
+            ]
+        )
+
+        if pilihan=="Distribusi Tahun":
+
+            fig = px.histogram(
+                df,
+                x="periode_data"
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+        elif pilihan=="Distribusi Bulan":
+
+            fig = px.histogram(
+                df,
+                x="bulan"
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+        elif pilihan=="Distribusi Stasiun":
+
+            jumlah = df["stasiun"].value_counts()
+
+            fig = px.bar(
+                jumlah,
+                x=jumlah.index,
+                y=jumlah.values
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+        else:
+
+            jumlah = df["kategori"].value_counts()
+
+            fig = px.bar(
+                jumlah,
+                x=jumlah.index,
+                y=jumlah.values
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+    with tab3:
+
+        st.subheader("Proporsi Kategori ISPU")
+
+        fig = px.pie(
+            df,
+            names="kategori"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+    with tab4:
+
+        st.subheader("Visualisasi PCA")
+
+        X = scaler.transform(df[fitur])
+
+        pca = PCA(n_components=2)
+
+        hasil = pca.fit_transform(X)
+
+        pca_df = pd.DataFrame()
+
+        pca_df["PC1"] = hasil[:,0]
+        pca_df["PC2"] = hasil[:,1]
+        pca_df["Cluster"] = df["cluster"].astype(str)
+
+        fig = px.scatter(
+            pca_df,
+            x="PC1",
+            y="PC2",
+            color="Cluster"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
