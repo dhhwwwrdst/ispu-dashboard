@@ -112,3 +112,89 @@ Dataset berasal dari data ISPU DKI Jakarta tahun 2023–2025 yang telah melalui 
     st.info(
         "Gunakan menu di sebelah kiri untuk mengeksplorasi dataset dan hasil clustering."
     )
+
+# =====================================================
+# DATASET INSIGHT
+# =====================================================
+
+elif menu == "📊 Dataset Insight":
+
+    st.title("📊 Dataset Insight")
+
+    st.write("Eksplorasi dataset berdasarkan tahun, bulan, dan stasiun pemantauan.")
+
+    st.divider()
+
+    # ==========================
+    # FILTER
+    # ==========================
+
+    col1, col2, col3 = st.columns(3)
+
+    tahun = col1.selectbox(
+        "Pilih Tahun",
+        ["Semua"] + sorted(df["periode_data"].astype(str).unique().tolist())
+    )
+
+    bulan = col2.selectbox(
+        "Pilih Bulan",
+        ["Semua"] + sorted(df["bulan"].astype(str).unique().tolist())
+    )
+
+    stasiun = col3.selectbox(
+        "Pilih Stasiun",
+        ["Semua"] + sorted(df["stasiun"].unique().tolist())
+    )
+
+    data = df.copy()
+
+    if tahun != "Semua":
+        data = data[data["periode_data"].astype(str) == tahun]
+
+    if bulan != "Semua":
+        data = data[data["bulan"].astype(str) == bulan]
+
+    if stasiun != "Semua":
+        data = data[data["stasiun"] == stasiun]
+
+    st.divider()
+
+    # ==========================
+    # METRIC
+    # ==========================
+
+    c1, c2, c3 = st.columns(3)
+
+    c1.metric(
+        "Jumlah Data",
+        len(data)
+    )
+
+    c2.metric(
+        "Jumlah Stasiun",
+        data["stasiun"].nunique()
+    )
+
+    c3.metric(
+        "Kategori ISPU",
+        data["kategori"].nunique()
+    )
+
+    st.divider()
+
+    st.subheader("Preview Dataset")
+
+    st.dataframe(
+        data,
+        use_container_width=True,
+        height=500
+    )
+
+    st.divider()
+
+    st.subheader("Statistik Deskriptif")
+
+    st.dataframe(
+        data[fitur].describe().round(2),
+        use_container_width=True
+    )
